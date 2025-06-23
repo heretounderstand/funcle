@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Funcle - Mathematical Function Guessing Game</title>
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.5.0/math.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">
+                        <span class="logo-icon">∫</span>
+                        <h1 class="title">FUNCLE</h1>
+                    </div>
+                    <p class="subtitle">Decipher the mathematical function by finding its coefficients</p>
+                </div>
+                
+                <!-- Advanced Level Selector -->
+                <div class="level-selector">
+                    <label for="level-select" class="level-label">Difficulty</label>
+                    <div class="select-wrapper">
+                        <select id="level-select" class="level-dropdown">
+                            <option value="noob" data-emoji="🌱">BEGINNER</option>
+                            <option value="amateur" selected data-emoji="⭐">AMATEUR</option>
+                            <option value="medium" data-emoji="🔥">MEDIUM</option>
+                            <option value="pro" data-emoji="💎">PRO</option>
+                            <option value="nerd" data-emoji="🧠">EXPERT</option>
+                        </select>
+                        <div class="select-arrow">▼</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="hidden modal-overlay">
+            <div class="modal">
+                <button class="close-modal">&times;</button>
+                <div class="modal-header">
+                    <h2>📚 How to Play Funcle</h2>
+                </div>
+                <div class="modal-content">
+                    <div class="instruction-card">
+                        <h3>🎯 Objective</h3>
+                        <p>Discover the <strong>5 coefficients</strong> of a mathematical function by analyzing its graph and making strategic guesses.</p>
+                    </div>
+                    
+                    <div class="instruction-card">
+                        <h3>🎮 Rules</h3>
+                        <ul>
+                            <li>You have <strong>6 attempts</strong> to find all coefficients</li>
+                            <li>Each coefficient is a <strong>whole number from 0 to 9</strong></li>
+                            <li>Use the interactive graph to understand the function's behavior</li>
+                            <li>Color feedback guides your next guess</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="instruction-card">
+                        <h3>🎨 Color System</h3>
+                        <div class="color-guide">
+                            <div class="color-item">
+                                <div class="color-demo correct"></div>
+                                <span>Correct position & value</span>
+                            </div>
+                            <div class="color-item">
+                                <div class="color-demo present"></div>
+                                <span>Right value, wrong position</span>
+                            </div>
+                            <div class="color-item">
+                                <div class="color-demo absent"></div>
+                                <span>Not in the solution</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="links-section">
+                        <h3>🔗 Connect</h3>
+                        <div class="social-links">
+                            <a href="kadrilud@gmail.com" target="_blank" class="social-link">
+                                <span class="link-icon">📧</span>
+                                Email
+                            </a>
+                            <a href="https://github.com/heretounderstand" target="_blank" class="social-link">
+                                <span class="link-icon">📂</span>
+                                GitHub
+                            </a>
+                            <a href="https://twitter.com/@kadrilud" target="_blank" class="social-link">
+                                <span class="link-icon">🐦</span>
+                                X | Twitter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Help Button -->
+        <button id="help-button" class="help-button">
+            <span class="help-icon">?</span>
+            <span class="help-text">Help</span>
+        </button>
+
+        <!-- Main Game Area -->
+        <main class="game-grid">
+            <!-- Graph Section -->
+            <section class="graph-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="section-icon">📊</span>
+                        Function Visualization
+                    </h2>
+                    <button id="toggle-graph" class="toggle-btn">
+                        <span class="toggle-icon">👁️</span>
+                        Hide Graph
+                    </button>
+                </div>
+                
+                <div id="graph-container" class="graph-container">
+                    <div id="function-graph" class="graph-plot"></div>
+                </div>
+                
+                <div class="function-info">
+                    <div class="info-card">
+                        <h3>Formula Structure</h3>
+                        <p id="formula-display" class="formula"></p>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Target:</span>
+                            <span class="info-value">Find coefficients A to E</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Range:</span>
+                            <span class="info-value">0 ≤ A,B,C,D,E ≤ 9</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Game Section -->
+            <section class="game-section">
+                <div class="game-header">
+                    <h2 class="section-title">
+                        <span class="section-icon">🎯</span>
+                        Your Guesses
+                    </h2>
+                    <div class="attempt-counter">
+                        <span class="counter-text">Attempt</span>
+                        <span class="counter-number" id="attempt-counter">0</span>
+                        <span class="counter-total">/6</span>
+                    </div>
+                </div>
+
+                <!-- Game Board -->
+                <div class="game-board">
+                    <div class="attempt-row" data-row="0">
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                    </div>
+                    <div class="attempt-row" data-row="1">
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                    </div>
+                    <div class="attempt-row" data-row="2">
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                    </div>
+                    <div class="attempt-row" data-row="3">
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                    </div>
+                    <div class="attempt-row" data-row="4">
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                    </div>
+                    <div class="attempt-row" data-row="5">
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                        <div class="cell empty"></div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Input Section -->
+                <div id="input-section" class="input-section">
+                    <h3 class="input-title">Enter your guess</h3>
+                    <div class="input-container">
+                        <div class="input-row">
+                            <div class="input-group">
+                                <input type="number" class="coeff-input" placeholder="?" min="0" max="9" data-index="0">
+                                <label class="coeff-label">A</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" class="coeff-input" placeholder="?" min="0" max="9" data-index="1">
+                                <label class="coeff-label">B</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" class="coeff-input" placeholder="?" min="0" max="9" data-index="2">
+                                <label class="coeff-label">C</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" class="coeff-input" placeholder="?" min="0" max="9" data-index="3">
+                                <label class="coeff-label">D</label>
+                            </div>
+                            <div class="input-group">
+                                <input type="number" class="coeff-input" placeholder="?" min="0" max="9" data-index="4">
+                                <label class="coeff-label">E</label>
+                            </div>
+                        </div>
+                        
+                        <button id="submit-btn" class="submit-btn">
+                            <span class="btn-icon">🚀</span>
+                            <span class="btn-text">Validate Guess</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enhanced Game End Messages -->
+                <div id="win-message" class="game-message win-message hidden">
+                    <div class="message-content">
+                        <div class="message-icon">🏆</div>
+                        <h3 class="message-title">Congratulations!</h3>
+                        <p class="message-subtitle">You cracked the mathematical code!</p>
+                        <div class="stats-display">
+                            <div class="stat">
+                                <span class="stat-value" id="win-attempts">0</span>
+                                <span class="stat-label">attempts</span>
+                            </div>
+                        </div>
+                        <p class="solution-display">
+                            <span class="solution-label">Solution:</span>
+                            <span class="solution-values">[<span id="win-solution"></span>]</span>
+                        </p>
+                        <div class="action-buttons">
+                            <button id="new-game-win" class="action-btn primary">
+                                <span class="btn-icon">🎮</span>
+                                New Challenge
+                            </button>
+                            <button id="share-btn" class="action-btn secondary">
+                                <span class="btn-icon">📋</span>
+                                Share Result
+                            </button>
+                        </div>
+                        <div id="next-puzzle-timer" class="timer-display"></div>
+                    </div>
+                </div>
+
+                <div id="lose-message" class="game-message lose-message hidden">
+                    <div class="message-content">
+                        <div class="message-icon">🎯</div>
+                        <h3 class="message-title">Nice Try!</h3>
+                        <p class="message-subtitle">The function remains unsolved</p>
+                        <p class="solution-display">
+                            <span class="solution-label">The solution was:</span>
+                            <span class="solution-values">[<span id="lose-solution"></span>]</span>
+                        </p>
+                        <button id="new-game-lose" class="action-btn primary">
+                            <span class="btn-icon">🔄</span>
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enhanced Legend -->
+                <div class="legend">
+                    <h3 class="legend-title">
+                        <span class="legend-icon">🎨</span>
+                        Color Guide
+                    </h3>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <div class="legend-color correct"></div>
+                            <div class="legend-text">
+                                <span class="legend-name">Perfect</span>
+                                <span class="legend-desc">Right value, right position</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color present"></div>
+                            <div class="legend-text">
+                                <span class="legend-name">Close</span>
+                                <span class="legend-desc">Value exists, wrong position</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color absent"></div>
+                            <div class="legend-text">
+                                <span class="legend-name">Miss</span>
+                                <span class="legend-desc">Value not in solution</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
