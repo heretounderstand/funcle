@@ -252,7 +252,7 @@ class FuncleGame {
     constructor() {
         // Constants
         this.COEFFICIENTS = Array.from({ length: 10 }, (_, i) => i); // [0, 1, ..., 9]
-        this.MAX_ATTEMPTS = 6;
+        this.MAX_ATTEMPTS = 4;
         this.LEVELS = ['noob', 'amateur', 'medium', 'pro', 'nerd'];
         
         // Game state
@@ -306,8 +306,7 @@ class FuncleGame {
             shareBtn: 'share-btn',
             nextPuzzleTimer: 'next-puzzle-timer',
             helpButton: 'help-button',
-            helpModal: 'help-modal',
-            closeModal: '.close-modal'
+            helpModal: 'help-modal'
         };
 
         // Assign DOM elements with error checking
@@ -353,6 +352,13 @@ class FuncleGame {
         // Share button
         this.shareBtn?.addEventListener('click', this.copyResults.bind(this));
 
+        // Handle 's' key press
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'i' || e.key === 'I') {
+                this.showCheatMessages();
+            }
+        });
+
         // Handle resize for graph
         window.addEventListener('resize', this.debounce(() => {
             if (window.Plotly && this.showGraph) {
@@ -387,8 +393,9 @@ class FuncleGame {
     }
 
     helpBtn() {
+        const closeModal = document.querySelector('.close-modal');
         this.helpButton.onclick = () => this.helpModal.classList.remove("hidden");
-        this.closeModal.onclick = () => this.helpModal.classList.add("hidden");
+        closeModal.onclick = () => this.helpModal.classList.add("hidden");
         this.window.onclick = e => { if (e.target == helpModal) this.helpModal.classList.add("hidden"); };
     }
 
@@ -525,6 +532,14 @@ class FuncleGame {
 
     // Game Logic
     async initializeGame() {
+        const levelState = this.levelStates[this.level];
+        if (levelState.attempts && levelState.attempts.length > 0) {
+            this.attempts = levelState.attempts;
+            this.currentAttempt = levelState.attempts.length;
+        } else {
+            this.attempts = [];
+            this.currentAttempt = 0;
+        }
         await this.startNewGame();
     }
 
@@ -598,7 +613,19 @@ class FuncleGame {
             if (this.attempts.length > 0) {
                 this.reconstructGameBoard();
             }
+
+            console.log("Press I to show the solution");
             
+        } catch (error) {
+            console.error('Failed to start new game:', error);
+            this.showError('Failed to start new game');
+        }
+    }
+
+    showCheatMessages() {
+        const firstResponse = prompt("Do you want to show the solution? (yes/no)")?.toLowerCase();
+
+        if (firstResponse === 'yes') {
             if (this.level === "noob") {
                 console.log("Congrats! You found the console. Too bad your problem-solving skills peaked at 'Right-Click > Inspect'. Maybe try guessing next time?");
             } 
@@ -614,9 +641,30 @@ class FuncleGame {
             else if (this.level === "nerd") {
                 console.log("Ah, a fellow nerd! Or just a poser? Real nerds solve equations—not Google them. Nice try, though.");
             }
-        } catch (error) {
-            console.error('Failed to start new game:', error);
-            this.showError('Failed to start new game');
+
+            const secondResponse = prompt("Do you still want to cheat? (yes/no)")?.toLowerCase();
+            
+            if (secondResponse === 'yes') {
+                if (this.level === "noob") {
+                    console.log("You're intelligent enough to access the console but not enough to guess a simple quadratic equation. At this point just quit.");
+                } 
+                else if (this.level === "amateur") {
+                    console.log("There is already a level for people like you and it's called noob. Be humble and just step down.");
+                } 
+                else if (this.level === "medium") {
+                    console.log("So close yet so far to the arithmetic mean. It seems like being average is your upper limit.");
+                } 
+                else if (this.level === "pro") {
+                    console.log("You're aware that using this now is accepting that you're definitely below a good chunk of the population.");
+                } 
+                else if (this.level === "nerd") {
+                    console.log("You just want that nerd aura boost. Understandable but kinda sad.");
+                }
+            } else {
+                console.log("Last minute wisdom? Too late, the system already judges you.");
+            }
+        } else {
+            console.log("Smartest decision you've made today. Too bad it won't raise your IQ.");
         }
     }
 
@@ -1005,8 +1053,9 @@ class FuncleGame {
         const attempts = this.attempts.length;
         const level = this.level.charAt(0).toUpperCase() + this.level.slice(1);
         const gameTime = this.gameEndTime ? Math.round((this.gameEndTime - this.gameStartTime) / 1000) : 0;
+        const gameLink = "https://funcle.netlify.app/"; 
         
-        let pattern = `🔢 Funcle ${level} ${attempts}/6\n\n`;
+        let pattern = `🔢 Funcle ${level} ${attempts}/4\n\n`;
         
         this.attempts.forEach(attempt => {
             let row = '';
@@ -1017,7 +1066,7 @@ class FuncleGame {
         });
         
         pattern += `\n⏱️ Solved in ${gameTime}s`;
-        pattern += `\n🧮 Mathematical puzzle solving game`;
+        pattern += `\n🧮 Mathematical puzzle solving game : ${gameLink}`;
         pattern += `\n#Funcle #MathPuzzle #DailyChallenge`;
         
         return pattern;
