@@ -358,13 +358,6 @@ class FuncleGame {
                 this.showCheatMessages();
             }
         });
-
-        // Handle resize for graph
-        window.addEventListener('resize', this.debounce(() => {
-            if (window.Plotly && this.showGraph) {
-                Plotly.Plots.resize('function-graph');
-            }
-        }, 250));
     }
 
     // Event Handlers
@@ -1142,29 +1135,6 @@ class FuncleGame {
         
         updateTimer();
         this.countdownInterval = setInterval(updateTimer, 1000);
-    }
-
-    // Utility functions
-    debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-
-    // Cleanup
-    destroy() {
-        if (this.countdownInterval) {
-            clearInterval(this.countdownInterval);
-        }
-        
-        // Remove event listeners if needed
-        window.removeEventListener('resize', this.debounce);
     }
 }
 
